@@ -25,52 +25,29 @@ None--> video saved in path_output
 
 """
 
-def FrameCapture(path, path_output, n, window): 
+def FrameCapture(original_video, video_to_write, n, window): 
 
     populate_start=window//2
     populate_end=(window//2) +1 # must be one more for extraction
-  
-    # Path to video file 
-    vidObj = cv2.VideoCapture(path) 
-    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # fourcc = int(vidObj.get(cv2.CAP_PROP_FOURCC))
-    # fourcc = cv2.VideoWriter_fourcc(*'H264')
-    fps = vidObj.get(cv2.CAP_PROP_FPS)
-    width = int(vidObj.get(cv2.CAP_PROP_FRAME_WIDTH))
-    height = int(vidObj.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    
 
-    total_frames = int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))
-
-    print("initial frame count", total_frames)
-
-
-    video = cv2.VideoWriter(path_output, fourcc, fps, (width, height))
-  
-    # Used as counter variable 
-    count = 0
-    number_repetitions=0
-  
-    # checks whether frames were extracted 
-    success = 1
-  
-    while success: 
-  
-        # vidObj object calls read 
-        # function extract frames 
-        success, image = vidObj.read() 
+    count=0
+    # vidObj object calls read 
+    # function extract frames 
+    success, image = original_video.read() 
         # frame_copied=image.copy()
 
-        if count==0:
+    if count==0:
             number_repetitions=populate_start+n
-        elif count==(total_frames-1):
+    elif count==(total_frames-1):
 
             number_repetitions=populate_end+n
-        else: 
+    else: 
              number_repetitions=n
 
         
-        for _ in range(number_repetitions):
-            video.write(image)
+    for _ in range(number_repetitions):
+            video_to_write.write(image)
 
 
 
@@ -80,11 +57,9 @@ def FrameCapture(path, path_output, n, window):
         # cv2.imwrite("framecop%d.jpg" % count, image) 
 
   
-        count += 1
+    count += 1
         
-    vidObj.release()
-    video.release() 
-    cv2.destroyAllWindows()  
+
     
 def Label_repetition(label_path,output_path,n):
 

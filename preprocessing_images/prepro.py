@@ -54,7 +54,20 @@ window=21
 ### Applying the functions to preprocess
 
 while count < len(paths): 
+    
     output_path=os.path.join(root_database,output_directory_videos,str(count)+".mp4")
+
+    vidObj = cv2.VideoCapture(paths[count]) 
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    # fourcc = int(vidObj.get(cv2.CAP_PROP_FOURCC))
+    # fourcc = cv2.VideoWriter_fourcc(*'H264')
+    fps = vidObj.get(cv2.CAP_PROP_FPS)
+    width = int(vidObj.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(vidObj.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    total_frames = int(vidObj.get(cv2.CAP_PROP_FRAME_COUNT))
+    print("initial frame count", total_frames)
+
+    video = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
 
     FrameCapture(paths[count], output_path, number_of_copies, window)
 
