@@ -40,9 +40,15 @@ condition = (image[:,:,0] > 200) & (image[:,:,1] > 200) & (image[:,:,2] > 200)
 image_copy[condition] = [255, 255, 255]
 kernel = np.ones((3, 3), np.float32) / 9
 image_copy = cv2.filter2D(image_copy, -1, kernel, borderType=cv2.BORDER_REPLICATE)
+
 yuv_image = cv2.cvtColor(image_copy, cv2.COLOR_BGR2YUV)
+
 result_image=yuv_image.copy()
 result_image1=yuv_image.copy()
+
+hsv_image = cv2.cvtColor(image_copy, cv2.COLOR_BGR2HSV)
+result_image_hsv1=hsv_image.copy()
+result_image_hsv2=hsv_image.copy()
 
 
 
@@ -51,23 +57,30 @@ result_image1=yuv_image.copy()
 
 # # Create a mask based on the grayscale intensity range
 mask = cv2.inRange(yuv_image[:, :, 0], lower_bound, upper_bound)
-roi = cv2.bitwise_and(mask, gray_image, mask=mask)
-#image_mask=yuv_image[:, :, 0]*mask
+roi = cv2.bitwise_and(mask, yuv_image[:, :, 0], mask=mask)
 
-# # Apply histogram equalization to the Y channel
-# image_mask[:, :, 0] = cv2.equalizeHist(image_mask[:, :, 0])
+mask1 = cv2.inRange(hsv_image[:, :, 2], lower_bound, upper_bound)
+roi1 = cv2.bitwise_and(mask1, hsv_image[:, :, 2], mask=mask1)
+
+
 equalized_roi= cv2.equalizeHist(roi)
+equalized_roi1= cv2.equalizeHist(roi1)
+
 
 result_image[:,:,0] = np.where(mask == 0, yuv_image[:, :, 0], equalized_roi)
 result_image1[:,:,0] = cv2.bilateralFilter(result_image[:,:,0],3,75,75)
+
+result_image_hsv1[:,:,2] = np.where(mask1 == 0, hsv_image[:, :, 2], equalized_roi1)
+result_image_hsv2[:,:,2] = cv2.bilateralFilter(result_image_hsv1[:,:,2],3,75,75)
 
 
 recovered_image = cv2.cvtColor(result_image, cv2.COLOR_YUV2BGR)
 recovered_image1 = cv2.cvtColor(result_image1, cv2.COLOR_YUV2BGR)
 
 
-# # Convert the image back to RGB color space
-# equalized_image = cv2.cvtColor(yuv_image, cv2.COLOR_YUV2BGR)
+recovered_image2 = cv2.cvtColor(result_image_hsv1, cv2.COLOR_HSV2BGR)
+recovered_image3 = cv2.cvtColor(result_image_hsv2, cv2.COLOR_HSV2BGR)
+
 
 # Display the original and equalized images
 cv2.imshow('Original Image', image)
@@ -79,8 +92,13 @@ cv2.imshow('y channel', yuv_image[:,:,0])
 cv2.imshow('equalized roi',equalized_roi)
 cv2.imshow('recovered_image',recovered_image)
 cv2.imshow('recovered_image1',recovered_image1)
+cv2.imshow('recovered_image_hsv',recovered_image2)
+cv2.imshow('recovered_image_hsv1',recovered_image3)
 
 cv2.imwrite('corrected_image.jpg', recovered_image1)
+
+
+
 
 cv2.waitKey(0)
 cv2.destroyAllWindows()
