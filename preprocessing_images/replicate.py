@@ -25,9 +25,6 @@ None--> video saved in path_output
 
 """
 
-
-#xzxczc
-
 def FrameCapture(path, path_output, n, window): 
 
     populate_start=window//2
