@@ -340,9 +340,23 @@ def Get_gt_labels(DataFrame_of_words, min_words=7,max_words=14,frame_rate=29.970
           gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
           break
       
-      if number_of_words==1844:
+      if number_of_words==1844 :
           
           end_time_temp=DataFrame_of_words.iloc[number_of_words-1]['end_time']
+          gt.loc[gt.index[-1], 'end_time'] = end_time_temp
+          gt.loc[gt.index[-1], 'number_of_words'] = gt.iloc[-1]['number_of_words']+count_of_signs
+      
+      elif number_of_words==1844 and count_of_signs<min_words:
+          
+          end_time_temp=DataFrame_of_words.iloc[number_of_words-1]['end_time']
+          new_row = { 'start_time': [start_time_temp],
+                      'end_time': [end_time_temp],
+                      'number_of_words': [count_of_signs]}
+          
+          Dataframe_to_add_data = pd.DataFrame(data=new_row)
+
+          gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
+
       else:
           
           end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
@@ -358,8 +372,6 @@ def Get_gt_labels(DataFrame_of_words, min_words=7,max_words=14,frame_rate=29.970
           gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
 
   return gt
-
-
 
 
 def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,output_directory):
