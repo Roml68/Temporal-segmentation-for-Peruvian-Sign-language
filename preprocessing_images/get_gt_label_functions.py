@@ -317,6 +317,8 @@ def Get_gt_labels(DataFrame_of_words, min_words=7,max_words=14,frame_rate=29.970
             elif count_of_signs!=number_of_selected_words and words==len(DataFrame_of_words)-1:
                 
                 break
+        elif words==1844:
+          break
             
 
       number_of_words=words
@@ -337,29 +339,37 @@ def Get_gt_labels(DataFrame_of_words, min_words=7,max_words=14,frame_rate=29.970
 
           gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
           break
+      
+      if number_of_words==1844:
+          
+          end_time_temp=DataFrame_of_words.iloc[number_of_words-1]['end_time']
+      else:
+          
+          end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
 
-      end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
 
+          new_row = { 'start_time': [start_time_temp],
+                      'end_time': [end_time_temp],
+                      'number_of_words': [number_of_selected_words]}
+        
 
-      new_row = { 'start_time': [start_time_temp],
-                  'end_time': [end_time_temp],
-                  'number_of_words': [number_of_selected_words]}
-     
+          Dataframe_to_add_data = pd.DataFrame(data=new_row)
 
-      Dataframe_to_add_data = pd.DataFrame(data=new_row)
-
-      gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
+          gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
 
   return gt
+
+
+
 
 def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,output_directory):
     frame_rate=29.97002997002997
 
 
-    with open(os.path.join(output_directory,"list_of_labels.txt"), "w") as file:
+    with open(os.path.join(output_directory,"list_of_labels.txt"), "w") as list_of_labels:
 
         for i, sentence_row in DataFrame_of_sentences.iterrows(): # iteration over every sentence inside the sentence Df
-          file.write(str(i)+ "\n")
+          list_of_labels.write(str(i)+".txt"+ "\n")
 
 
           #iniciating variables
@@ -386,12 +396,12 @@ def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,ou
           start_time_of_the_sentence_new1 = words_within_sentence.iloc[0]['start_time']
           end_time_of_the_sentence_new1   = words_within_sentence.iloc[-1]['end_time']
 
-          # print(words_within_sentence)
+          print(words_within_sentence)
 
           ################## new
 
 
-          with open(os.path.join(output_directory,str(i),".txt"), "w") as file:
+          with open(os.path.join(output_directory,str(i)+".txt"), "w") as file:
 
             for number_of_word_within_sentence in range(0,words_within_sentence.shape[0]):
               number_of_frames_inside_word=0
