@@ -1,6 +1,8 @@
 from datetime import timedelta
 import numpy as np
 import pandas as pd
+import random
+import os
 
 def convert_to_Delta_format(Time):
 
@@ -259,9 +261,12 @@ df_output:
   return df2
 
 
+
+
+
   ####################################################################
 
-def Get_gt_labels(DataFrame_of_sentences,DataFrame_of_words,frame_rate=29.97002997002997):
+def Get_gt_labels(DataFrame_of_words, min_words=7,max_words=14,frame_rate=29.97002997002997):
 
   """ gets the ground truth label for every frame that contains a sentence in sign language
   ...
@@ -278,134 +283,127 @@ def Get_gt_labels(DataFrame_of_sentences,DataFrame_of_words,frame_rate=29.970029
   """
 
 
-  gt = pd.DataFrame(columns=['label', 'gt_label_per_word']) # creates the gt Df
-
-  #--------------------------------------------------------------------------------------
-  # preliminar initialization fo the accumulative variables
-
-  number_of_frames_inside_word_accumulated_total = 0
-  number_of_frames_inside_sentence_total = 0
-
-  number_of_frames_inside_word = 0
-  number_of_frames_inside_word_accumulated = 0
-  number_of_frames_inside_sentence = 0
-
-  #----------------------------------------------------------------------------------------
-  # making sure that every sentence is exaclty next to each other
-
-  i=0
-  while i < len(DataFrame_of_sentences) - 1:
-      if DataFrame_of_sentences.iloc[i]['end_time'] != DataFrame_of_sentences.iloc[i+1]['start_time']:
-         DataFrame_of_sentences.loc[i, 'end_time'] = DataFrame_of_sentences.iloc[i+1]['start_time']
-      i+=1
-  #-----------------------------------------------------------------------------------------
-  # iteration to find the words inside every sentence and get the number of frames
-  # - the condition is that there must the same amount of frames inside a sentence as the acummulated number of frames per word inside every sentence
-
-  for i, sentence_row in DataFrame_of_sentences.iterrows(): # iteration over every sentence inside the sentence Df
+  gt = pd.DataFrame(columns=['start_time', 'end_time','number_of_words']) # creates the gt Df
 
 
-      number_of_frames_inside_word_accumulated_total=number_of_frames_inside_word_accumulated_total+number_of_frames_inside_word_accumulated
-      number_of_frames_inside_sentence_total = number_of_frames_inside_sentence_total + number_of_frames_inside_sentence
-
-      #iniciating variables
-
-      words_within_sentence = []
-      temporal_vector_label = []
-
-      number_of_frames_inside_word = 0
-      number_of_frames_inside_word_accumulated = 0
-      number_of_frames_inside_sentence = 0
+  number_of_words=0
+  start_time_temp=0
+  end_time_temp=0
 
 
-      #---------------------------------------------------------------------
-      #getting the start and end time of the sentence
-      start_time_of_the_sentence = DataFrame_of_sentences.iloc[i]['start_time']
-      end_time_of_the_sentence = DataFrame_of_sentences.iloc[i]['end_time']
-
-      #---------------------------------------------------------------------
-      #getting the words that are inside a sentence with a tolerance of 50 ms
-
-      words_within_sentence = DataFrame_of_words[
-                 ((DataFrame_of_words['start_time'].apply(lambda x: abs(x - start_time_of_the_sentence).total_seconds()) <= 0.106) |
-                  (DataFrame_of_words['start_time'] >= start_time_of_the_sentence))   &
-                 ((DataFrame_of_words['end_time'] <= end_time_of_the_sentence) |
-                 (DataFrame_of_words['end_time'].apply(lambda x: abs(x - end_time_of_the_sentence).total_seconds()) <= 0.106) ) &
-                  (DataFrame_of_words['start_time'] < end_time_of_the_sentence)]
-
-      #---------------------------------------------------------------------
-      #adjusting the time of the sentence, so it is exactly the same as the start of the first word and the end of the last word
-
-      start_time_of_the_sentence_new=words_within_sentence.iloc[0]['start_time']
-      end_time_of_the_sentence_new =words_within_sentence.iloc[-1]['end_time']
-
-      DataFrame_of_sentences.loc[i, 'start_time'] = start_time_of_the_sentence_new
-      DataFrame_of_sentences.loc[i, 'end_time'] = end_time_of_the_sentence_new
+  while number_of_words < len(DataFrame_of_words): # iteration over every sentence inside the sentence Df
+      
+      if number_of_words==0:
+          start_time_temp=DataFrame_of_words.iloc[number_of_words]['start_time']
+          
+      else:
+          start_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
+          number_of_words=number_of_words+1
 
 
+      number_of_selected_words=random.randint(min_words,max_words)
+      count_of_signs=0
 
-      #------------------------------------------------------------------------------
-      # rounding the start and end times for the sentence and every word
+      for words in range(number_of_words,len(DataFrame_of_words)):
+          
+        if DataFrame_of_words.iloc[words]['label']=='sign':
+            
+            count_of_signs=count_of_signs+1
+        
+            if count_of_signs==number_of_selected_words:
+                
+                break
+            
+            elif count_of_signs!=number_of_selected_words and words==len(DataFrame_of_words)-1:
+                
+                break
+            
 
-
-      start_time_of_the_sentence_rounded = timedelta(seconds=(round(start_time_of_the_sentence_new.total_seconds()*frame_rate)/frame_rate))
-      end_time_of_the_sentence_rounded = timedelta(seconds=(round(end_time_of_the_sentence_new.total_seconds()*frame_rate)/frame_rate))
-      end_frame_sentence =round(end_time_of_the_sentence_rounded.total_seconds()*frame_rate)
-      start_frame_sentence = round(start_time_of_the_sentence_rounded.total_seconds()*frame_rate)
-      number_of_frames_inside_sentence = (end_frame_sentence - start_frame_sentence)
-
-      for number_of_word_within_sentence in range(0,words_within_sentence.shape[0]):
-          number_of_frames_inside_word=0
-
-          start_time_of_the_word_rounded = timedelta(seconds=(round(words_within_sentence.iloc[number_of_word_within_sentence].start_time.total_seconds()*frame_rate)/frame_rate))
-          end_time_of_the_word_rounded = timedelta(seconds=(round(words_within_sentence.iloc[number_of_word_within_sentence].end_time.total_seconds()*frame_rate)/frame_rate))
-          end_frame_word = round(end_time_of_the_word_rounded.total_seconds()*frame_rate)
-          start_frame_word = round(start_time_of_the_word_rounded.total_seconds()*frame_rate)
-
-          number_of_frames_inside_word=(end_frame_word - start_frame_word)
-
-
-          number_of_frames_inside_word_accumulated = number_of_frames_inside_word_accumulated + number_of_frames_inside_word
-
-      #---------------------------------------------------------------------
-      #creating a vector of 0's or 1's depending on the label of every word
+      number_of_words=words
 
 
-          if words_within_sentence.iloc[number_of_word_within_sentence]['label']=='ME':
+      if number_of_words>=len(DataFrame_of_words)-1:
+          
+          number_of_words=len(DataFrame_of_words)-1
+          end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
 
-                temporal_vector_label.extend(np.ones(number_of_frames_inside_word,dtype=int))
 
-          else:
-                temporal_vector_label.extend(np.zeros(number_of_frames_inside_word,dtype=int))
-          # print("word",number_of_frames_inside_word)
-      # print(temporal_vector_label)
+          new_row = { 'start_time': [start_time_temp],
+                  'end_time': [end_time_temp],
+                  'number_of_words': [number_of_selected_words]}
+     
 
-      #---------------------------------------------------------------------------------------
-
-      # print("number_of_frames_inside_word_accumulated",number_of_frames_inside_word_accumulated)
-
-      #---------------------------------------------------------------------------------------
-      #saving the entire vector of every sentence in a Df
-
-      if number_of_frames_inside_sentence == number_of_frames_inside_word_accumulated : #making sure no frame is missing
-        #making sure no frame is missing
-
-          new_row = { 'label': sentence_row.label,
-                      'gt_label_per_word': [temporal_vector_label]}
-
-          Dataframe_to_add_data = pd.DataFrame(new_row)
+          Dataframe_to_add_data = pd.DataFrame(data=new_row)
 
           gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
+          break
 
-      else:
+      end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
 
-        print("the number of total frames is not the same as the ones inside every word")
 
-      #-------------------------------------------------------------------------------------
+      new_row = { 'start_time': [start_time_temp],
+                  'end_time': [end_time_temp],
+                  'number_of_words': [number_of_selected_words]}
+     
 
-  print("accumulated number of frames inside a word",number_of_frames_inside_word_accumulated_total)
-  print("accumulated number of frames inside a sentence",number_of_frames_inside_sentence_total)
+      Dataframe_to_add_data = pd.DataFrame(data=new_row)
 
-  return gt,DataFrame_of_sentences
+      gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
 
+  return gt
+
+def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,output_directory):
+    frame_rate=29.97002997002997
+
+
+    with open(os.path.join(output_directory,"list_of_labels.txt"), "w") as file:
+
+        for i, sentence_row in DataFrame_of_sentences.iterrows(): # iteration over every sentence inside the sentence Df
+          file.write(str(i)+ "\n")
+
+
+          #iniciating variables
+
+          words_within_sentence = []
+          temporal_vector_label = []
+
+          number_of_frames_inside_word = 0
+          number_of_frames_inside_word_accumulated = 0
+          number_of_frames_inside_sentence = 0
+
+
+          #---------------------------------------------------------------------
+          #getting the start and end time of the sentence
+          start_time_of_the_sentence = DataFrame_of_sentences.iloc[i]['start_time']
+          end_time_of_the_sentence = DataFrame_of_sentences.iloc[i]['end_time']
+
+          #---------------------------------------------------------------------
+          #getting the words that are inside a sentence with a tolerance of 50 ms
+
+          words_within_sentence = DataFrame_of_words[
+                    ((DataFrame_of_words['start_time'] >= start_time_of_the_sentence))   &
+                    ((DataFrame_of_words['end_time']<= end_time_of_the_sentence))]
+          start_time_of_the_sentence_new1 = words_within_sentence.iloc[0]['start_time']
+          end_time_of_the_sentence_new1   = words_within_sentence.iloc[-1]['end_time']
+
+          # print(words_within_sentence)
+
+          ################## new
+
+
+          with open(os.path.join(output_directory,str(i),".txt"), "w") as file:
+
+            for number_of_word_within_sentence in range(0,words_within_sentence.shape[0]):
+              number_of_frames_inside_word=0
+
+              start_time_of_the_word_rounded = timedelta(seconds=(round(words_within_sentence.iloc[number_of_word_within_sentence].start_time.total_seconds()*frame_rate)/frame_rate))
+              end_time_of_the_word_rounded = timedelta(seconds=(round(words_within_sentence.iloc[number_of_word_within_sentence].end_time.total_seconds()*frame_rate)/frame_rate))
+              end_frame_word = round(end_time_of_the_word_rounded.total_seconds()*frame_rate)
+              start_frame_word = round(start_time_of_the_word_rounded.total_seconds()*frame_rate)
+
+              number_of_frames_inside_word=(end_frame_word - start_frame_word)
+
+
+              for i1 in range(number_of_frames_inside_word):
+                  file.write(str(words_within_sentence.iloc[number_of_word_within_sentence].label)+ "\n")
 
