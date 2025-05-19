@@ -1,0 +1,10 @@
+0 -> original
+1 -> rotated
+2 -> zoom
+3 -> traslation
+
+
+split1-> 0 y 1
+split2->0,1,2
+split3->0,1,3
+split4->0,2,3

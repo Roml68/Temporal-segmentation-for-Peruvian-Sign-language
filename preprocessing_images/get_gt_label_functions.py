@@ -28,7 +28,7 @@ def convert_to_Delta_format(Time):
             hours,minutes,seconds_milliseconds = Time.split(':')
             seconds,milliseconds = seconds_milliseconds.split('.')
 
-  TimeDeltaFormat = timedelta(seconds=int(seconds), milliseconds=int((milliseconds)), minutes=int(minutes), hours=int(hours))
+  TimeDeltaFormat = timedelta(seconds=int(seconds), milliseconds=int(milliseconds), minutes=int(minutes), hours=int(hours))
 
   return TimeDeltaFormat
 
@@ -149,15 +149,15 @@ def change_label(Dataframe, vector_to_change):
     Dataframe.loc[~Dataframe['label'].isin(['ME']), 'label'] = 'sign'
 
     #print total annotated and modified labels to be ME
-    print("-------------------------------------------------------------------------")
+    # print("-------------------------------------------------------------------------")
 
-    print("total annotated: "+ " "+ str(len(Dataframe)))
+    # print("total annotated: "+ " "+ str(len(Dataframe)))
     count_me = Dataframe['label'].value_counts().get('ME', 0)
-    print("there are " + str(count_me)+ " "+ 'ME')
+    # print("there are " + str(count_me)+ " "+ 'ME')
     count_sign = Dataframe['label'].value_counts().get('sign', 0)
-    print("there are " + str(count_sign)+ " "+ 'sign')
+    # print("there are " + str(count_sign)+ " "+ 'sign')
 
-    print("-------------------------------------------------------------------------")
+    # print("-------------------------------------------------------------------------")
 
     df2 = Dataframe.copy() #make a copy of the original df
 
@@ -174,8 +174,8 @@ def change_label(Dataframe, vector_to_change):
             i += 1 # go to the next annotation
 
     count_me_final = df2['label'].value_counts().get('ME', 0) # get the number of blank spaces labelled as ME
-    print("total ME identified plus blank spaces " + str(count_me_final)+ " "+ 'ME')
-    print("-------------------------------------------------------------------------")
+    # print("total ME identified plus blank spaces " + str(count_me_final)+ " "+ 'ME')
+    # print("-------------------------------------------------------------------------")
     return df2
 
   ####################################################################
@@ -378,7 +378,7 @@ def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,ou
     frame_rate=29.97002997002997
 
 
-    with open(os.path.join(output_directory,"list_of_labels.txt"), "w") as list_of_labels:
+    with open(os.path.join(output_directory.replace('labelsrefined',""),"list_of_labels.txt"), "w") as list_of_labels:
 
         for i, sentence_row in DataFrame_of_sentences.iterrows(): # iteration over every sentence inside the sentence Df
           list_of_labels.write(str(i)+".txt"+ "\n")
@@ -408,7 +408,7 @@ def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,ou
           start_time_of_the_sentence_new1 = words_within_sentence.iloc[0]['start_time']
           end_time_of_the_sentence_new1   = words_within_sentence.iloc[-1]['end_time']
 
-          print(words_within_sentence)
+          # print(words_within_sentence) # for debugging-->getting the words that are being considered in every sentence
 
           ################## new
 

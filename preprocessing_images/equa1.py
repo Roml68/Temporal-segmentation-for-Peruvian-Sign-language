@@ -7,7 +7,7 @@ complete_path=path + '0095.jpg'
 image = cv2.imread(complete_path, cv2.IMREAD_COLOR)
 image_copy = image.copy()
 
-def corlorCorrection_and_histequalization(frame,lower_bound=30,upper_bound=220,color_domain="hsv", apply_filtering=False):
+def corlorCorrection_and_histequalization(frame,lower_bound=40,upper_bound=220,color_domain="hsv", apply_filtering=False):
 
     # lower_bound = 30 #20#30 
     # upper_bound = 220 #250
@@ -111,30 +111,7 @@ def corlorCorrection_and_histequalization(frame,lower_bound=30,upper_bound=220,c
         
     return recovered_image
 
-_,final_image=corlorCorrection_and_histequalization(image,lower_bound=40,upper_bound=220,color_domain="compare", apply_filtering=False)
+# final_image_hsv,final_image_yuv=corlorCorrection_and_histequalization(image,lower_bound=40,upper_bound=220,color_domain="compare", apply_filtering=False)
 
-# cv2.imshow('final_image',final_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-"""
-
-# Create a mask based on the grayscale intensity range
-mask = cv2.inRange(gray_image, lower_bound, upper_bound)
-roi = cv2.bitwise_and(gray_image, gray_image, mask=mask)
-image_mask=gray_image*mask
-
-equ = cv2.equalizeHist(image_mask)
-
-new_image=cv2.cvtColor(equ,cv2.COLOR_GRAY2RGB)
-
-new_image1=cv2.cvtColor(gray_image,cv2.COLOR_GRAY2RGB)
-
-cv2.imshow('equ',equ)
-cv2.imshow('mask',image_mask)
-cv2.imshow('roi',roi)
-
-
-cv2.waitKey(0)
-cv2.destroyAllWindows()
-
-"""
+# cv2.imwrite('equalized_image_hsv.jpg', final_image_hsv) 
+# cv2.imwrite('equalized_image_yuv.jpg', final_image_yuv) 
