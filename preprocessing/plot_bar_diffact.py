@@ -1,3 +1,7 @@
+"""
+This file plots the qualitative results per video, cmnparing the gt and predicted labels
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -16,7 +20,7 @@ plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # Function to plot the bar graph
 
-def plot_barcode(class_num, gt=None, pred=None, frame_idx=0, total_frames=100):
+def plot_barcode(class_num, gt=None, pred=None, frame_idx=0, total_frames=100, output_path=None):
     if class_num <= 10:
         color_map = plt.cm.tab10
     elif class_num > 20:
@@ -48,7 +52,7 @@ def plot_barcode(class_num, gt=None, pred=None, frame_idx=0, total_frames=100):
         if total_frames > 0:
             current_position = (frame_idx / total_frames) * pred.shape[0]
             
-    plt.savefig("/home/summy/University/writtint_article/images/26_video_diffact_test.pdf")
+    plt.savefig(output_path)
     plt.show()
     
 
@@ -70,9 +74,11 @@ def labels_to_array1(txt_file):
 video="78"
 path_gt = f"/home/summy/Tesis/dataset/manejar_conflictos/labelsrefined/{video}.txt"
 path_pred = f"/media/summy/NEW VOLUME/final_results/two_models_manejar_conflictos_final_test/0_results/prediction/{video}.txt"
+output_path=f"/home/summy/University/writtint_article/images/{video}_video_diffact_test.pdf"
+
+
 
 gt = labels_to_array(path_gt)
 pred = labels_to_array1(path_pred)
 
-# Plot only
-plot_barcode(class_num=2, gt=gt, pred=pred, frame_idx=10, total_frames=len(gt))
+plot_barcode(class_num=2, gt=gt, pred=pred, frame_idx=10, total_frames=len(gt),output_path=output_path)

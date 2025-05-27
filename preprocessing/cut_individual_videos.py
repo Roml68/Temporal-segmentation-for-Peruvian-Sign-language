@@ -1,3 +1,8 @@
+"""
+This file contains the neccesary functions used to preprocess the videos for the dataset pucp_305,
+considering it contains indivual videos with different dimentions
+"""
+
 import subprocess
 import cv2
 import os
@@ -81,22 +86,15 @@ def process_videos_from_list(folder_path, output_folder, video_list_path):
         crop_and_rescale_video(input_file_path, output_file_path)
     
 
-# # Paths to input and output files
-# input_file_path = "/home/summy/Tesis/Segundo_avance_(corregido)/ABRIR/ABRIR_ORACION_1.mp4"
-# cropped_output_path = "/home/summy/Tesis/Segundo_avance_(corregido)/ABRIR/cropped_video.mp4"
-# rescaled_output_path = "/home/summy/Tesis/Segundo_avance_(corregido)/ABRIR/rescaled_video.mp4"
+## usage example
 
-# # First, crop the video
-# get_segment_ver2(input_file_path, cropped_output_path)
+# root_path="/home/summy/Tesis/dataset/305_PUCP"
+# folder="raw_data"
 
+# videos_folder=os.path.join(root_path,folder)
+# output_folder=os.path.join(root_path,"videos")
 
-root_path="/home/summy/Tesis/dataset/305_PUCP"
-folder="raw_data"
+# output_path_txt=generate_video_list(videos_folder,root_path)
 
-videos_folder=os.path.join(root_path,folder)
-output_folder=os.path.join(root_path,"videos")
-
-output_path_txt=generate_video_list(videos_folder,root_path)
-
-process_videos_from_list(videos_folder, output_folder, output_path_txt)
+# process_videos_from_list(videos_folder, output_folder, output_path_txt)
 

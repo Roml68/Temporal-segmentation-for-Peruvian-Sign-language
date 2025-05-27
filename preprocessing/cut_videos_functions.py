@@ -1,9 +1,17 @@
+"""
+This file contains the functions used to cut the video into smaller fragments given a range of time
+
+"""
+
+
 import numpy as np
 import pandas as pd
 import cv2
 import os
 import subprocess
 from datetime import timedelta
+import subprocess
+
 
 # Functions
 # -------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -139,9 +147,6 @@ def timestamp_to_frame(timestamp, frame_rate=30): #code to get number of the fra
 
 ##############################################################################################################################################################
 
-import subprocess
-from datetime import timedelta
-
 def get_segment(start_time, end_time, frame_rate, input_file_path, output_file_path):
 
     """
@@ -161,7 +166,7 @@ def get_segment(start_time, end_time, frame_rate, input_file_path, output_file_p
     None-->saved clips in the output path
 
     """
-    # pixels where the signer is located
+    # range of pixels where the signer is located
     y1 = 380
     y2 = 600
     x1 = 988
@@ -179,24 +184,6 @@ def get_segment(start_time, end_time, frame_rate, input_file_path, output_file_p
     start_frame=round(TimeDeltaFormat_start.total_seconds()*frame_rate)
     end_frame=round(TimeDeltaFormat_end.total_seconds()*frame_rate)
 
-    # Build the FFmpeg command to extract the subclip and remove audio
-    # ffmpeg_command = [
-    #     'ffmpeg',
-    #     '-i', input_file_path,
-    #     '-ss', str(TimeDeltaFormat_start),  # Start time
-    #     '-t', str(TimeDeltaFormat_end - TimeDeltaFormat_start),  # Duration
-    #     '-an',  # Remove audio
-    #     '-c:v', 'libx264',
-    # ]
-
-
-
-    # crop_filter = f'crop={x2 - x1}:{y2 - y1}:{x1}:{y1}' #cropping the most relevant section
-    # ffmpeg_command.extend(['-vf', crop_filter])
-
-    # ffmpeg_command.append(output_file_path)
-
-    # subprocess.run(ffmpeg_command)
 
     ffmpeg_command = [
         "ffmpeg",
@@ -251,15 +238,11 @@ def extract_clips(df,video_file_path,output_path,number_clips=None):
         name_file   = video_file_path.split('/') # gets an array of every string that contains the input path
 
 
-
-        # NameFileSplittedbyUnderscore= df.label[i].replace(",", "").replace(" ", "_") # gets the sentence label separated by underscore
-        # output_file_path = output_path + name_file[len(name_file)-1].replace(".mp4", "") +'/'+ str(NameFileSplittedbyUnderscore + '_'+ str(i) + '.mp4')
         output_file_path = os.path.join(output_path, str(i) + '.mp4')
         get_segment(start_time,end_time,frame_rate,video_file_path,output_file_path)
         print("frames:",start_frame,end_frame)
         print(frame_rate)
         print(output_file_path)
-        # file.write("./"+str(NameFileSplittedbyUnderscore + '_'+ str(i) + '.mp4')+ "\n")
         file.write(str(i) + '.mp4'+ "\n")
 
 

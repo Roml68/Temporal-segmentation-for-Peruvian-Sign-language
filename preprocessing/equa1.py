@@ -1,16 +1,16 @@
+"""
+This file contains code for color correction and equalization of a frame
+"""
+
+
 import numpy as np
 import cv2 
 import matplotlib.pyplot as plt
 
-path=r"/home/summy/Tesis/preprocessing_images/buenos_FPS/"
-complete_path=path + '0095.jpg'
-image = cv2.imread(complete_path, cv2.IMREAD_COLOR)
-image_copy = image.copy()
+
 
 def corlorCorrection_and_histequalization(frame,lower_bound=40,upper_bound=220,color_domain="hsv", apply_filtering=False):
 
-    # lower_bound = 30 #20#30 
-    # upper_bound = 220 #250
 
     image_copy = frame.copy() #creating a copy of the frame
 
@@ -111,7 +111,3 @@ def corlorCorrection_and_histequalization(frame,lower_bound=40,upper_bound=220,c
         
     return recovered_image
 
-# final_image_hsv,final_image_yuv=corlorCorrection_and_histequalization(image,lower_bound=40,upper_bound=220,color_domain="compare", apply_filtering=False)
-
-# cv2.imwrite('equalized_image_hsv.jpg', final_image_hsv) 
-# cv2.imwrite('equalized_image_yuv.jpg', final_image_yuv) 

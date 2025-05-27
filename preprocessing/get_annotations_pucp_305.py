@@ -1,3 +1,8 @@
+"""
+This file is used to generate the respective frame-wise annotations for pucp_305 dataset
+"""
+
+
 import os
 from get_gt_label_functions import convert_to_Delta_format,change_label
 import pandas as pd
@@ -86,7 +91,9 @@ def get_txt_from_sentence_dataframe(index,words_within_sentence,output_directory
               for i1 in range(number_of_frames_inside_word):
                   file.write(str(words_within_sentence.iloc[number_of_word_within_sentence].label)+ "\n")
 
-            print(acc)
+
+
+            
 def get_index_from_list(list_of_videos, target_filename):
     with open(list_of_videos, 'r') as file:
         lines = file.readlines()
@@ -126,14 +133,6 @@ output_dir=os.path.join(root_dir,"PUCP_305_RE","labels")
 dir_list = os.listdir(annotations_dir)
 
 
-
-
-
-
-
-
-# dir_list=dir_list[:2]
-
 vector_to_change=['ME', 'descanso'] # vector where it is declared the labels to consider as ME
 
 categories_to_count=["seña gestual", "NN", "descanso" ,"muletilla"]
@@ -149,13 +148,6 @@ for file_path in dir_list:
     for category, count in counts.items():
             total_counts[category] += count
 
-    # DataFrame_of_words_ME_sign = change_label(df,vector_to_change)
-    
-    # index=get_index_from_list(list_of_videos_dir,file_path)
-    # print(f"-----------{index}----------------")
-    # print(DataFrame_of_words_ME_sign)
-    # get_txt_from_sentence_dataframe(index,DataFrame_of_words_ME_sign,output_dir)
-    
 
 
 print(total_counts)

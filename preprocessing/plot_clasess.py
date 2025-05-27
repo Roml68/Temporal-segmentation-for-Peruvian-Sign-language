@@ -1,3 +1,6 @@
+"""
+file that plots a graph comparing the number of frames per classes -- sign and transition -- 
+"""
 import pandas as pd
 import matplotlib.pyplot as plt
 import re

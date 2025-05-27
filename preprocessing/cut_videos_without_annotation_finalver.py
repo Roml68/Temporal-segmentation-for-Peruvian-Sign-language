@@ -1,8 +1,17 @@
+"""
+This file contains the functions used to cut a long video into smaller segments with random durations,
+so that the model can be tested using other samples
+
+"""
+
 import random
 from datetime import timedelta
 import pandas as pd
 import os
 import cv2
+import subprocess
+
+
 
 # Convert time strings to seconds
 def time_to_seconds(time_str):
@@ -15,7 +24,7 @@ def seconds_to_time(seconds):
 # Parameters
 start_time_video = "00:00:31.600"
 end_time_video = "00:25:38.307"
-silencios = [["00:02:24.787", "00:04:16.652"], 
+silencios = [["00:02:24.787", "00:04:16.652"], # sections of the video where the signer is in silence
              ["00:06:38.627", "00:06:47.987"], 
              ["00:06:58.413", "00:07:08.440"], 
              ["00:15:14.933", "00:15:24.440"]]
@@ -69,13 +78,10 @@ def get_df_videos_from_unnanottated(start_time_sec,end_time_sec,min_sec,max_sec)
 
     df = pd.DataFrame(formatted_segments, columns=["start_time", "end_time", "name_of_video"])
 
-
-
     return df
 
+#########################################################################################
 
-import subprocess
-from datetime import timedelta
 
 def get_segment(start_time, end_time, frame_rate, input_file_path, output_file_path):
 
@@ -96,15 +102,8 @@ def get_segment(start_time, end_time, frame_rate, input_file_path, output_file_p
     None-->saved clips in the output path
 
     """
-    # pixels where the signer is located
 
-    #varlores originales
-    # y1 = 380
-    # y2 = 600
-    # x1 = 988
-    # x2 = 1208
-
-    #modificado
+    ## range of pixels to cut the frames -> should be modified depending on the video
 
     y1 = 400
     y2 = 630
@@ -123,16 +122,6 @@ def get_segment(start_time, end_time, frame_rate, input_file_path, output_file_p
     start_frame=round(TimeDeltaFormat_start.total_seconds()*frame_rate)
     end_frame=round(TimeDeltaFormat_end.total_seconds()*frame_rate)
 
-
-    # ffmpeg_command = [
-    #     "ffmpeg",
-    #     "-i", input_file_path,
-    #     "-filter_complex",
-    #     f"[0:v]trim=start_frame={start_frame}:end_frame={end_frame},setpts=PTS-STARTPTS,crop={x2 - x1}:{y2 - y1}:{x1}:{y1}[v]",
-    #     "-r", str(frame_rate),
-    #     "-map", "[v]",
-    #     output_file_path
-    # ]
 
     ffmpeg_command = [
     "ffmpeg",
@@ -243,20 +232,14 @@ def extract_clips(df,video_file_path,output_path,number_clips=None):
 
 
 
-video_file_path="/home/summy/Tesis/30_04_2020.mp4"
+## usage example
 
-output_path="/home/summy/Tesis/dataset/test_videos"
+# video_file_path="/home/summy/Tesis/30_04_2020.mp4"
 
-df=get_df_videos_from_unnanottated(start_time_sec,end_time_sec,min_sec,max_sec)
+# output_path="/home/summy/Tesis/dataset/test_videos"
 
-df.to_csv(os.path.join(output_path,"video_segments.txt"), sep="\t", index=False, header=True)
+# df=get_df_videos_from_unnanottated(start_time_sec,end_time_sec,min_sec,max_sec)
 
-extract_clips(df,video_file_path,output_path)
+# df.to_csv(os.path.join(output_path,"video_segments.txt"), sep="\t", index=False, header=True)
 
-
-
-
-
-
-
-print(df[90:100])
+# extract_clips(df,video_file_path,output_path)

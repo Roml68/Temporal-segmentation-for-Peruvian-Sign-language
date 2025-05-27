@@ -1,58 +1,23 @@
 import cv2
 import os
-import albumentations as A
 import numpy as np
 
-# directory="/home/summy/Tesis/Temporal-segmentation-for-Peruvian-Sign-language-/preprocessing_images/buenos_FPS"
-
-#############
-
-# image = cv2.imread(os.path.join(directory,"0095.jpg"), cv2.IMREAD_COLOR)
-# image = image.astype(np.float32) / 255.0
-
-# image=cv2.cvtColor(image,cv2.COLOR_BGR2RGB) #just when using someting different from opencv
-
-
-# single_transform = A.RandomBrightnessContrast(p=1.0)
-# single_transform = A.Emboss(p=1.0)
-# single_transform = A.PlanckianJitter(mode="blackbody", temperature_limit=(7999, 8050),sampling_method="uniform",p=1.0)
-# single_transform = A.Compose([
-#     A.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.05, p=1.0)
-# ])
-
-# single_transform = A.RandomGamma(gamma_limit=(150, 150), p=1.0) # adjust the brightness of an image while preserving the relative differences between darker and lighter areas
-# single_transform=A.Sharpen(alpha=(0.5,0.5),p=1.0)
-# single_transform=A.unsharp_mask(p=1.0)
-
-
-
-
-
-    
-# # Apply the transformation
-# augmented = single_transform(image=image)
-# augmented_image = augmented["image"]
-
-# cv2.imshow("a",augmented_image)
-
-# cv2.waitKey(0) 
-# cv2.destroyAllWindows() 
 
 ############
 
 def corlorCorrection(frame,margin=40):
+
+    """
+    This function corrects the background of every frame, so it is 
+    uniform and white
+    
+    """
 
     # lower_bound = 30 #20#30 
     # upper_bound = 220 #250
 
     image_copy = frame.copy() #creating a copy of the frame
     h, w, _ = frame.shape
-
-    ### Color Correction--> changing gray colors around the white background
-    # lower_bound = np.array([180, 180, 180], dtype=np.uint8)  # Adjusted lower threshold for grayish white
-    # upper_bound = np.array([255, 255, 255], dtype=np.uint8) 
-
-    # mask = cv2.inRange(frame, lower_bound, upper_bound)
 
     condition = (frame[:,:,0] > 200) & (frame[:,:,1] > 200) & (frame[:,:,2] > 200) #looking for sections where the pixel are closer to white
                                                                                    #selecting the greay sections
@@ -79,33 +44,11 @@ def corlorCorrection(frame,margin=40):
 
     return image_copy
 
-# def corlorCorrection(frame, margin=30):
-#     # Create a copy of the frame
-#     image_copy = frame.copy()
-#     h, w, _ = frame.shape
-
-#     # Define a region of interest (ROI) around the borders where gray lines may appear
-#     mask = np.zeros((h, w), dtype=np.uint8)
-#     mask[margin:h-margin, margin:w-margin] = 1  # Exclude the central area
-
-#     # Define the color range for near-white (light gray) colors
-#     lower_bound = np.array([180, 180, 180], dtype=np.uint8)
-#     upper_bound = np.array([255, 255, 255], dtype=np.uint8)
-
-#     # Create a mask for near-white areas within the border region only
-#     near_white_mask = cv2.inRange(frame, lower_bound, upper_bound)
-#     near_white_mask = cv2.bitwise_and(near_white_mask, near_white_mask, mask=(1 - mask))
-
-#     # Change near-white regions to pure white in the border area
-#     image_copy[near_white_mask > 0] = [255, 255, 255]
-
-#     # Optionally, apply a slight Gaussian blur to only the modified areas for smoother transitions
-#     blurred_image = cv2.GaussianBlur(image_copy, (3, 3), 0)
-#     image_copy = np.where(near_white_mask[..., None] > 0, blurred_image, image_copy)
-
-#     return image_copy
 
 def rotate_image(image, angle, background_color=(255, 255, 255)):
+    """
+    This function applies rotation to every frame of the video, given an angle value
+    """
     # Get the image size
     h, w = image.shape[:2]
     
@@ -119,6 +62,10 @@ def rotate_image(image, angle, background_color=(255, 255, 255)):
     return rotated_image
 
 def zoom_image(image, scale=1.2, background_color=(255, 255, 255)):
+
+    """
+    This function applies zoom variation to every frame of the video given an scale factor
+    """
     # Compute the size for zooming in or out
     h, w = image.shape[:2]
     zoomed_size = (int(w * scale), int(h * scale))
@@ -143,6 +90,10 @@ def zoom_image(image, scale=1.2, background_color=(255, 255, 255)):
     return cropped_image
 
 def translate_image(image, x_shift=0, y_shift=0, background_color=(255, 255, 255)):
+
+    """
+    This function applies translation to every frame of the video given an x and y shift
+    """
     # Get the dimensions of the image
     h, w = image.shape[:2]
     
@@ -190,38 +141,3 @@ def shear_image(image, x_shear=0, y_shear=0, background_color=(255, 255, 255)):
     cropped_sheared_image = sheared_image[start_y:start_y + h, start_x:start_x + w]
     
     return cropped_sheared_image
-# Load an image for testing
-
-
-# image = cv2.imread(os.path.join(directory,"0099.jpg"), cv2.IMREAD_COLOR)
-
-
-# # Rotate and zoom the image
-
-# image=corlorCorrection(image)
-# rotated_image = rotate_image(image, angle=0)
-# zoomed_image = zoom_image(image, scale=1)
-# # Translate the image 50 pixels to the right and 30 pixels down
-# translated_right = translate_image(image, x_shift=15, y_shift=15)
-# translated_left = translate_image(image, x_shift=-15, y_shift=-15)
-# noisy_image=add_salt_and_pepper_noise(image, noise_ratio=0.001)
-
-# # Apply shearing to the image
-# sheared_image_x = shear_image(image, x_shear=0.1)  # Shear along the x-axis
-# sheared_image_y = shear_image(image, y_shear=0.1)  # Shear along the y-axis
-
-# # Display the results
-# cv2.imshow("Sheared Image X-axis", sheared_image_x)
-# cv2.imshow("Sheared Image Y-axis", sheared_image_y)
-
-# # cv2.imshow("Noisy image", noisy_image)
-
-
-# cv2.imshow("Translated Right", translated_right)
-# cv2.imshow("Translated Left", translated_left)
-
-
-# cv2.imshow("Rotated Image", rotated_image)
-# cv2.imshow("Zoomed Image", zoomed_image)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()

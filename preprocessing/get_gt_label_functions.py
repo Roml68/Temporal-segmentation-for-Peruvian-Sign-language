@@ -1,8 +1,21 @@
+"""
+
+This file contains utility functions for preprocessing annotation data
+into frame-wise labels suitable for machine learning models. It ensures 
+that each annotation is accurately mapped to every corresponding frame 
+in a given video, enabling supervised learning on frame-level tasks such as 
+temporal segmentation or classification.
+
+"""
+
+# Import libraries
+
 from datetime import timedelta
 import numpy as np
 import pandas as pd
 import random
 import os
+
 
 def convert_to_Delta_format(Time):
 
@@ -152,9 +165,9 @@ def change_label(Dataframe, vector_to_change):
     # print("-------------------------------------------------------------------------")
 
     # print("total annotated: "+ " "+ str(len(Dataframe)))
-    count_me = Dataframe['label'].value_counts().get('ME', 0)
+    # count_me = Dataframe['label'].value_counts().get('ME', 0)
     # print("there are " + str(count_me)+ " "+ 'ME')
-    count_sign = Dataframe['label'].value_counts().get('sign', 0)
+    # count_sign = Dataframe['label'].value_counts().get('sign', 0)
     # print("there are " + str(count_sign)+ " "+ 'sign')
 
     # print("-------------------------------------------------------------------------")
@@ -193,188 +206,172 @@ def search_for_sentence_number_given_time(word,DataFrame_of_sentences_1):
     i += 1
   return number_of_sentence
 
-  ####################################################################
-
-def merge_labels(Dataframe, DataFrame_of_sentences_1, label_to_merge):
-
-  """
-  This function merges two adjacent labels that are the same and are in the same sentence
-  ...
-
-  Input
-  -----
-  Dataframe: df where the changes are going to be applied
-  label_to_merge: label that need to me merged
-
-  Output:
-  -------
-  df2: df with the indicated label merged
-
-  Example:
-  --------
-
-  df_output = merge_labels(df, 'ME')
-
-df:
-
-   |  | label      | start_time   | end_time    |
-   |  |----------- |--------------|-------------|
-   | 0|sign        |	00:00:30.078|	00:00:32.174|
-   | 1|ME          |	00:00:32.174|	00:00:34.078|
-   | 1|ME          |	00:00:34.078|	00:00:35.174|
-
-df_output:
-
-   |  | label      | start_time   | end_time    |
-   |  |----------- |--------------|-------------|
-   | 0|sign        |	00:00:30.078|	00:00:32.174|
-   | 1|ME          |	00:00:32.174|	00:00:35.174|
-
-  """
-  df2 = Dataframe.copy()
-  i=0
-  j=0
-  sentence_number_temp=-2
-  sentence_number_1=-1
-  while i < len(df2) - 1:
-    j=0
-    sentence_number_temp=-2
-    sentence_number_1=-1
-    if df2.iloc[i]['label'] == label_to_merge :
-
-      j = i + 1
-      sentence_number_1 = search_for_sentence_number_given_time(df2.iloc[i],DataFrame_of_sentences_1)
-      sentence_number_temp = search_for_sentence_number_given_time(df2.iloc[j],DataFrame_of_sentences_1)
-
-      while (j < len(df2)) and (df2.iloc[j]['label'] == label_to_merge) and (sentence_number_1==sentence_number_temp):
-            j += 1
-            if j < len(df2):
-                    sentence_number_temp = search_for_sentence_number_given_time(df2.iloc[j], DataFrame_of_sentences_1)
-      df2.loc[i, 'end_time'] = df2.iloc[j-1]['end_time']
-      df2 = pd.concat([df2.iloc[:i+1], df2.iloc[j:]], ignore_index=True)
-    i+=1
-  count = df2['label'].value_counts().get(label_to_merge, 0)
-  print("--------------------------------------------------------------------")
-  print("new number of " + label_to_merge + " :"+ str(count) + " when merged" )
-  print("--------------------------------------------------------------------")
-
-  return df2
-
-
-
-
 
   ####################################################################
 
-def Get_gt_labels(DataFrame_of_words, min_words=7,max_words=14,frame_rate=29.97002997002997):
+def get_Dataframe_of_sentences(dataframe_of_words,min_words=7,max_words=14,small_possible_number_of_words=4,silencio_label=None):
+    
+    """
+    Segments a DataFrame of word-level annotations into sentence-like units using random word count thresholds 
+    and silence labels. Skips filler words ('NN', 'muletilla') and groups valid words into sentences until 
+    either a random sentence length is reached or a 'silencio' label forces a break, considering minimum 
+    sentence size constraints.
 
-  """ gets the ground truth label for every frame that contains a sentence in sign language
-  ...
-  Input
-  -----
-  DataFrame_of_sentences: Df that contains the start and end time of every sentence
-  DataFrame_of_words    : Df that contains the start and end time of every word inside the sentences
-  frame_rate            : Frame_rate of the original video
+    Inputs:
+    -------
+    - dataframe_of_words : pandas.DataFrame  
+      DataFrame with columns:  
+        - 'start_time': timestamp in delta format, start time of each word  
+        - 'end_time'  : timestamp in delta format, end time of each word  
+        - 'label'     : label of each word (e.g., 'persona', 'silencio', 'NN', etc.)
 
-  Output
-  -----
+    - min_words : int, optional (default=7)  
+      Minimum number of words in a sentence.
 
-  gt: Df of ground truth labels for every frame of the sentence
-  """
+    - max_words : int, optional (default=14)  
+      Maximum number of words in a sentence.
 
+    - small_possible_number_of_words : int, optional (default=4)  
+      Minimum acceptable sentence size when interrupted by silence.
 
-  gt = pd.DataFrame(columns=['start_time', 'end_time','number_of_words']) # creates the gt Df
+    Output:
+    -------
+    - pandas.DataFrame  
+      New DataFrame with sentence-like segments containing columns:  
+        - 'start_time'      : timestamp in delta format, sentence start time  
+        - 'end_time'        : timestamp in delta format, sentence end time  
+        - 'number_of_words' : int, count of words in the sentence
 
-
-  number_of_words=0
-  start_time_temp=0
-  end_time_temp=0
-
-
-  while number_of_words < len(DataFrame_of_words): # iteration over every sentence inside the sentence Df
-      
-      if number_of_words==0:
-          start_time_temp=DataFrame_of_words.iloc[number_of_words]['start_time']
-          
-      else:
-          start_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
-          number_of_words=number_of_words+1
+    
+    
+    """
 
 
-      number_of_selected_words=random.randint(min_words,max_words)
-      count_of_signs=0
+    accumulator_number_of_words_inside_sentence=0
 
-      for words in range(number_of_words,len(DataFrame_of_words)):
-          
-        if DataFrame_of_words.iloc[words]['label']=='sign':
+    start_time_temp=dataframe_of_words.iloc[0]['start_time']
+
+    random_number=random.randint(min_words,max_words)
+
+    Dataframe_of_sentences = pd.DataFrame(columns=['start_time', 'end_time','number_of_words'])
+
+    for index, row in dataframe_of_words.iterrows():
+
+        if row['label'] not in ['NN', 'muletilla']:
+
+            accumulator_number_of_words_inside_sentence+=1
+                    
+            if accumulator_number_of_words_inside_sentence==random_number:
+
+
+                new_row = { 'start_time': start_time_temp,
+                            'end_time': row['end_time'],
+                            'number_of_words': int(accumulator_number_of_words_inside_sentence)}
+                    
+                start_time_temp=row['end_time']
+
+                accumulator_number_of_words_inside_sentence=0
+
+
+                    ###3
+                Dataframe_to_add_data = pd.DataFrame([new_row])
+
+                Dataframe_of_sentences = pd.concat([Dataframe_of_sentences, Dataframe_to_add_data], ignore_index = True)
+
+                random_number=random.randint(min_words,max_words)
             
-            count_of_signs=count_of_signs+1
-        
-            if count_of_signs==number_of_selected_words:
+                if  row['label']==silencio_label :
+
+                    print("SILENCIOOOOOO")
+
+
+                    if accumulator_number_of_words_inside_sentence<=small_possible_number_of_words:
+                    
+                            end_time_temp=row['start_time']
+                            Dataframe_of_sentences.loc[Dataframe_of_sentences.index[-1], 'end_time'] = end_time_temp
+
+                    elif accumulator_number_of_words_inside_sentence==random_number or accumulator_number_of_words_inside_sentence>small_possible_number_of_words:
+                            new_row = { 'start_time': start_time_temp,
+                            'end_time': row['start_time'],
+                            'number_of_words': int(accumulator_number_of_words_inside_sentence)}
+                        
+                            Dataframe_to_add_data = pd.DataFrame([new_row])
+
+                            Dataframe_of_sentences = pd.concat([Dataframe_of_sentences, Dataframe_to_add_data], ignore_index = True)
+
+            
+
+
+            
+            elif row['label']==silencio_label :
+
+                if accumulator_number_of_words_inside_sentence<=small_possible_number_of_words:
                 
-                break
-            
-            elif count_of_signs!=number_of_selected_words and words==len(DataFrame_of_words)-1:
+                        end_time_temp=row['start_time']
+                        Dataframe_of_sentences.loc[Dataframe_of_sentences.index[-1], 'end_time'] = end_time_temp
+
+                elif accumulator_number_of_words_inside_sentence>small_possible_number_of_words:
+                        new_row = { 'start_time': start_time_temp,
+                        'end_time': row['start_time'],
+                        'number_of_words': int(accumulator_number_of_words_inside_sentence)}
+                    
+                        Dataframe_to_add_data = pd.DataFrame([new_row])
+
+                        Dataframe_of_sentences = pd.concat([Dataframe_of_sentences, Dataframe_to_add_data], ignore_index = True)
+
+
+                elif accumulator_number_of_words_inside_sentence==1:
+
+                        start_time_temp=row['end_time']
+
+                start_time_temp=row['end_time']
+                accumulator_number_of_words_inside_sentence=0
+
+
+            elif index==(len(dataframe_of_words)-1) and accumulator_number_of_words_inside_sentence<random_number: 
                 
-                break
-        elif words==1844:
-          break
+
             
-
-      number_of_words=words
-
-
-      if number_of_words>=len(DataFrame_of_words)-1:
-          
-          number_of_words=len(DataFrame_of_words)-1
-          end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
+                if accumulator_number_of_words_inside_sentence <= small_possible_number_of_words: # if the end of dataframe
 
 
-          new_row = { 'start_time': [start_time_temp],
-                  'end_time': [end_time_temp],
-                  'number_of_words': [number_of_selected_words]}
-     
+                    Dataframe_of_sentences.at[Dataframe_of_sentences.index[-1], 'end_time'] = row['end_time']
 
-          Dataframe_to_add_data = pd.DataFrame(data=new_row)
+                else: 
 
-          gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
-          break
-      
-      if number_of_words==1844 :
-          
-          end_time_temp=DataFrame_of_words.iloc[number_of_words-1]['end_time']
-          gt.loc[gt.index[-1], 'end_time'] = end_time_temp
-          gt.loc[gt.index[-1], 'number_of_words'] = gt.iloc[-1]['number_of_words']+count_of_signs
-      
-      elif number_of_words==1844 and count_of_signs<min_words:
-          
-          end_time_temp=DataFrame_of_words.iloc[number_of_words-1]['end_time']
-          new_row = { 'start_time': [start_time_temp],
-                      'end_time': [end_time_temp],
-                      'number_of_words': [count_of_signs]}
-          
-          Dataframe_to_add_data = pd.DataFrame(data=new_row)
+                    new_row = { 'start_time': start_time_temp,
+                        'end_time': row['end_time'],
+                        'number_of_words': int(accumulator_number_of_words_inside_sentence)}
+                    
+                    Dataframe_to_add_data = pd.DataFrame([new_row])
 
-          gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
-
-      else:
-          
-          end_time_temp=DataFrame_of_words.iloc[number_of_words]['end_time']
-
-
-          new_row = { 'start_time': [start_time_temp],
-                      'end_time': [end_time_temp],
-                      'number_of_words': [number_of_selected_words]}
-        
-
-          Dataframe_to_add_data = pd.DataFrame(data=new_row)
-
-          gt = pd.concat([gt, Dataframe_to_add_data], ignore_index = True)
-
-  return gt
+                    Dataframe_of_sentences = pd.concat([Dataframe_of_sentences, Dataframe_to_add_data], ignore_index = True)
+                
+    
+    return Dataframe_of_sentences
+  ####################################################################
 
 
 def get_txt_from_sentence_dataframe(DataFrame_of_sentences,DataFrame_of_words,output_directory):
+    
+    """
+    Generates frame-level label `.txt` files for each segmented sentence based on word-level annotations. 
+    For every sentence in the input DataFrame, it creates a corresponding label file where each frame 
+    within that sentence duration is labeled with the associated word's label. Also creates a `list_of_labels.txt` 
+    file listing the names of all generated label files.
+
+    Inputs:
+    -------
+    - DataFrame_of_sentences 
+    - DataFrame_of_words 
+    - output_directory : Path to the output directory
+
+    Output:
+    -------
+    - Text files in the specified `output_directory`, one per sentence, containing frame-level labels.
+    - A `list_of_labels.txt` file listing all generated `.txt` files, used as an index.
+
+    """
     frame_rate=29.97002997002997
 
 

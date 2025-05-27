@@ -1,3 +1,7 @@
+"""
+This directory contains the application of data augmentation to a list of videos
+"""
+
 import numpy as np
 import cv2 
 import ffmpeg
@@ -9,7 +13,6 @@ import random
 #### Importing functions
 
 from replicate import replicate_frames
-from replicate import Label_repetition
 from equa1 import corlorCorrection_and_histequalization
 from data_augmenation import rotate_image,corlorCorrection,zoom_image,translate_image
 
@@ -37,27 +40,23 @@ output_directory_list_labels=os.path.join(root_database,"preprocessed_labels.txt
 
 ### Data augmentation conf
 
-#range of angles --> 0
+# rotation --> 0
 
 max_right_rotation= 10
 max_left_rotation= -10
 
-#zoomin_zoomout --> 1
+# zoomin_zoomout --> 1
 
 zoom_out= 0.8
 zoom_in= 1.2  
 
-#translation
+# translation --> 2
 
 min_x_translation=-15
 max_x_translation=15
 
 min_y_translation=-15
 max_y_translation=15
-
-
-
-
 
 
 #### Getting the paths of the videos 
@@ -77,9 +76,9 @@ paths_labels = [path.strip() for path in paths_labels]
 paths_labels = [os.path.join(labels,path) for path in paths_labels]
 
 ### Generating variables
-count_files=0
-number_of_copies=1
-window=21
+count_files = 0
+number_of_copies = 1
+window = 21
 
 ### Applying the functions to preprocess
 
@@ -92,8 +91,6 @@ while count_files < len(paths):
     #getting information from the original video
     original_video = cv2.VideoCapture(paths[count_files]) 
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    # fourcc = int(vidObj.get(cv2.CAP_PROP_FOURCC))
-    # fourcc = cv2.VideoWriter_fourcc(*'H264')
     fps = original_video.get(cv2.CAP_PROP_FPS)
     width = int(original_video.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(original_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -104,7 +101,9 @@ while count_files < len(paths):
 
     #creating the object to write the new video
     video_to_write = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
-  
+
+
+    #### modify this section as needed to apply one of the given data augmentation techniques
     
     count_frames=0 #stores the actual frame number to preprocess
 
@@ -126,7 +125,7 @@ while count_files < len(paths):
     random_x=np.random.randint(min_x_translation,max_x_translation)
     random_y=np.random.randint(min_y_translation,max_y_translation)
 
-
+    ####
 
 
 
@@ -150,13 +149,6 @@ while count_files < len(paths):
     original_video.release()
     video_to_write.release() 
     cv2.destroyAllWindows()
-
-
-
-
-    ### Preprocesing the labels so they match the new videos
-    # output_path_labels=os.path.join(root_database,output_directory_labels,str(count_files)+".txt")
-    # Label_repetition(paths_labels[count_files], output_path_labels,number_of_copies)
 
 
     ### Storing the names of the video and label files--> getting a list 

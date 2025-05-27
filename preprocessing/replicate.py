@@ -1,3 +1,8 @@
+"""
+This file contains the functions used to replicate frames depending on the window size
+"""
+
+
 import numpy as np
 import cv2 
 import ffmpeg
