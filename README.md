@@ -33,6 +33,8 @@ Our approach leverages deep learning techniques to perform segmentation in the t
 |   |   ├── . . .  
 │   ├── joined_splits   
 │   ├── test_data 
+├── Feature_extraction
+|   ├── files
 ├── MS-TCN
 │   ├── files
 │   ├── results
